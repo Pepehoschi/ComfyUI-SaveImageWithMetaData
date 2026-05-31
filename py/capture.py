@@ -10,13 +10,21 @@ from execution import get_input_data
 from comfy_execution.graph import DynamicPrompt
 
 
+class OutputCacheAdapter:
+    def __init__(self, output_cache):
+        self.output_cache = output_cache
+
+    def get_cache(self, from_node_id, to_node_id):
+        return self.output_cache.get_local(from_node_id)
+
+
 class Capture:
     @classmethod
     def get_inputs(cls):
         inputs = {}
         prompt = hook.current_prompt
         extra_data = hook.current_extra_data
-        outputs = hook.prompt_executer.caches.outputs
+        outputs = OutputCacheAdapter(hook.prompt_executer.caches.outputs)
 
         for node_id, obj in prompt.items():
             class_type = obj["class_type"]

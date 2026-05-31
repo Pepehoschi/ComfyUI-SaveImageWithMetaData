@@ -2,14 +2,22 @@
 ![SaveImageWithMetaData Preview](img/save_image_with_metadata.png)  
 日本語版READMEは[こちら](README.jp.md)。
 
+This is a compatibility fork of the original [nkchocoai/ComfyUI-SaveImageWithMetaData](https://github.com/nkchocoai/ComfyUI-SaveImageWithMetaData) custom node.
+
 - Custom node for [ComfyUI](https://github.com/comfyanonymous/ComfyUI).
 - Add a node to save images with metadata (PNGInfo) extracted from the input values of each node.
 - Since the values are extracted dynamically, values output by various extension nodes can be added to metadata.
 
+## Changes in this fork
+- Fix extension metadata definition imports for newer ComfyUI custom-node loading.
+- Add compatibility with ComfyUI's newer hierarchical output cache API.
+- Fix embedding metadata extraction for tokenizer layouts that do not expose `clip_l`, including Z-Image with `Qwen_3_4b.safetensors`.
+- Skip embedding hash extraction when an embedding reference cannot be resolved instead of failing the save.
+
 ## Installation
 ```
 cd <ComfyUI directory>/custom_nodes
-git clone https://github.com/nkchocoai/ComfyUI-SaveImageWithMetaData.git
+git clone https://github.com/pepehoschi/ComfyUI-SaveImageWithMetaData.git
 ```
 
 ## Nodes

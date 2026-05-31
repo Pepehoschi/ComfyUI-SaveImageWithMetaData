@@ -6,11 +6,6 @@ from ..utils.hash import calc_hash
 from ..utils.embedding import get_embedding_file_path
 
 from comfy.sd1_clip import escape_important, token_weights, unescape_important
-from comfy.sd1_clip import SD1Tokenizer
-from comfy.text_encoders.sd2_clip import SD2Tokenizer
-from comfy.text_encoders.sd3_clip import SD3Tokenizer
-from comfy.text_encoders.flux import FluxTokenizer
-from comfy.sdxl_clip import SDXLTokenizer
 
 cache_model_hash = {}
 
@@ -60,9 +55,27 @@ def extract_embedding_hashes(text, input_data):
     embedding_hashes = []
     for embedding_name in embedding_names:
         embedding_file_path = get_embedding_file_path(embedding_name, clip)
+        if embedding_file_path is None:
+            continue
         embedding_hashes.append(calc_hash(embedding_file_path))
 
     return embedding_hashes
+
+
+def _get_embedding_clip(tokenizer):
+    clip_attr = getattr(tokenizer, "clip", None)
+    if isinstance(clip_attr, str) and hasattr(tokenizer, clip_attr):
+        return getattr(tokenizer, clip_attr)
+
+    for attr_name in ("clip_l", "clip_h", "clip_g"):
+        if hasattr(tokenizer, attr_name):
+            return getattr(tokenizer, attr_name)
+
+    for value in vars(tokenizer).values():
+        if hasattr(value, "embedding_identifier") and hasattr(value, "embedding_directory"):
+            return value
+
+    return None
 
 
 def _extract_embedding_names(text, input_data):
@@ -70,17 +83,7 @@ def _extract_embedding_names(text, input_data):
     clip_ = input_data[0]["clip"][0]
     clip = None
     if clip_ is not None:
-        tokenizer = clip_.tokenizer
-        if isinstance(tokenizer, SD1Tokenizer):
-            clip = tokenizer.clip_l
-        elif isinstance(tokenizer, SD2Tokenizer):
-            clip = tokenizer.clip_h
-        elif isinstance(tokenizer, SDXLTokenizer):
-            clip = tokenizer.clip_l
-        elif isinstance(tokenizer, SD3Tokenizer):
-            clip = tokenizer.clip_l
-        elif isinstance(tokenizer, FluxTokenizer):
-            clip = tokenizer.clip_l
+        clip = _get_embedding_clip(clip_.tokenizer)
         if clip is not None and hasattr(clip, "embedding_identifier"):
             embedding_identifier = clip.embedding_identifier
     if not isinstance(text, str):
@@ -96,8 +99,9 @@ def _extract_embedding_names(text, input_data):
         for word in to_tokenize:
             # find an embedding, deal with the embedding
             if (
-                word.startswith(embedding_identifier)
-                and clip.embedding_directory is not None
+                clip is not None
+                and word.startswith(embedding_identifier)
+                and getattr(clip, "embedding_directory", None) is not None
             ):
                 embedding_name = word[len(embedding_identifier) :].strip("\n")
                 embedding_names.append(embedding_name)
