@@ -57,7 +57,9 @@ def extract_embedding_hashes(text, input_data):
         embedding_file_path = get_embedding_file_path(embedding_name, clip)
         if embedding_file_path is None:
             continue
-        embedding_hashes.append(calc_hash(embedding_file_path))
+        embedding_hash = calc_hash(embedding_file_path)
+        if embedding_hash is not None:
+            embedding_hashes.append(embedding_hash)
 
     return embedding_hashes
 

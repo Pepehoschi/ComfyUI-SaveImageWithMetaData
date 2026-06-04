@@ -71,6 +71,8 @@ class Capture:
                                 v = value[0]
                             if format is not None:
                                 v = format(v, input_data)
+                            if v is None:
+                                continue
                             if isinstance(v, list):
                                 for x in v:
                                     inputs[meta].append((node_id, x))
